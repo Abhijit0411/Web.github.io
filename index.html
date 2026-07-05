@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GridPulse — Factory Energy Monitoring & Sustainability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark">GP</span>
+      <div>
+        <h1>GridPulse</h1>
+        <p>Factory Energy Monitoring & Sustainability</p>
+      </div>
+    </div>
+    <p class="login-sub">Select your role to sign in to the control room.</p>
+    <div class="role-grid">
+      <button class="role-card" data-role="Admin">
+        <span class="role-icon">⚙</span>
+        <span class="role-title">Admin</span>
+        <span class="role-desc">Full system access & user management</span>
+      </button>
+      <button class="role-card" data-role="Factory Manager">
+        <span class="role-icon">▣</span>
+        <span class="role-title">Factory Manager</span>
+        <span class="role-desc">Plant oversight, reports & analytics</span>
+      </button>
+      <button class="role-card" data-role="Operator">
+        <span class="role-icon">◷</span>
+        <span class="role-title">Operator</span>
+        <span class="role-desc">Machine monitoring & alerts</span>
+      </button>
+    </div>
+    <form id="loginForm" class="login-form hidden">
+      <div class="selected-role-banner">
+        Signing in as <strong id="selectedRoleLabel"></strong>
+        <button type="button" id="changeRoleBtn">change</button>
+      </div>
+      <label>Username
+        <input type="text" id="loginUser" placeholder="e.g. rahul.k" required />
+      </label>
+      <label>Password
+        <input type="password" id="loginPass" placeholder="••••••••" required />
+      </label>
+      <button type="submit" class="btn-primary full-width">Enter control room →</button>
+      <p class="login-hint">Demo mode — any username / password works.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="appShell" class="app-shell hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">GP</span>
+      <span class="brand-name">GridPulse</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-page="dashboard"><i>◆</i>Dashboard</button>
+      <button class="nav-item" data-page="twin"><i>▦</i>Digital twin</button>
+      <button class="nav-item" data-page="machines"><i>⚙</i>Machines</button>
+      <button class="nav-item" data-page="analytics"><i>∿</i>AI analytics</button>
+      <button class="nav-item" data-page="alerts"><i>▲</i>Alerts <span id="alertNavBadge" class="nav-badge hidden">0</span></button>
+      <button class="nav-item" data-page="reports"><i>▤</i>Reports</button>
+      <button class="nav-item" data-page="sustainability"><i>❋</i>Sustainability</button>
+      <button class="nav-item" data-page="settings"><i>◎</i>Settings</button>
+      <button class="nav-item" data-page="support"><i>?</i>Support</button>
+    </nav>
+    <button id="logoutBtn" class="logout-btn">⏻ Sign out</button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 id="pageTitle">Dashboard</h2>
+        <span id="pageClock" class="page-clock"></span>
+      </div>
+      <div class="topbar-right">
+        <span class="role-badge" id="roleBadge">Operator</span>
+        <button id="darkToggle" class="icon-btn" title="Toggle theme">☾</button>
+        <div class="avatar" id="userAvatar">OP</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section id="page-dashboard" class="page active">
+        <div class="power-strip">
+          <div class="power-strip-main">
+            <span class="power-label">Live plant load</span>
+            <span class="power-value"><span id="livePower">0</span> <small>kW</small></span>
+            <span class="power-sub" id="powerTrend">▲ steady</span>
+          </div>
+          <canvas id="sparkline" class="sparkline" height="60"></canvas>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Energy consumed today</span>
+            <span class="kpi-value"><span id="kpiEnergyToday">0</span> <small>kWh</small></span>
+            <span class="kpi-delta good" id="kpiEnergyDelta">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Current electricity cost</span>
+            <span class="kpi-value">₹<span id="kpiCost">0</span></span>
+            <span class="kpi-delta" id="kpiCostDelta">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Carbon emissions today</span>
+            <span class="kpi-value"><span id="kpiCarbon">0</span> <small>kg CO₂</small></span>
+            <span class="kpi-delta good" id="kpiCarbonDelta">–</span>
+          </div>
+          <div class="kpi-card accent">
+            <span class="kpi-label">Total savings (month)</span>
+            <span class="kpi-value">₹<span id="kpiSavings">0</span></span>
+            <span class="kpi-delta good" id="kpiSavingsDelta">–</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Live energy usage</h3>
+              <span class="panel-sub">last 60 readings</span>
+            </div>
+            <div class="chart-wrap"><canvas id="liveEnergyChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Machine status</h3>
+              <span class="panel-sub" id="machineStatusCount">–</span>
+            </div>
+            <div id="statusSummary" class="status-summary"></div>
+            <div id="machineMiniList" class="machine-mini-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DIGITAL TWIN ============ -->
+      <section id="page-twin" class="page">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Factory floor — live digital twin</h3>
+            <span class="panel-sub">click a node for details</span>
+          </div>
+          <div class="twin-wrap">
+            <svg id="twinSvg" viewBox="0 0 900 480" class="twin-svg"></svg>
+          </div>
+          <div class="twin-legend">
+            <span><i class="dot healthy"></i> Healthy</span>
+            <span><i class="dot warning"></i> Warning</span>
+            <span><i class="dot fault"></i> Fault</span>
+            <span><i class="dot off"></i> Off</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MACHINES ============ -->
+      <section id="page-machines" class="page">
+        <div class="panel-head standalone">
+          <h3>Machine monitoring</h3>
+          <span class="panel-sub" id="machineCountLabel">–</span>
+        </div>
+        <div id="machineGrid" class="machine-grid"></div>
+      </section>
+
+      <!-- ============ AI ANALYTICS ============ -->
+      <section id="page-analytics" class="page">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Energy prediction</h3>
+              <span class="panel-sub">7-day forecast</span>
+            </div>
+            <div class="chart-wrap"><canvas id="predictionChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Energy efficiency score</h3>
+            </div>
+            <div class="chart-wrap score-wrap"><canvas id="effScoreChart"></canvas></div>
+            <p class="score-caption" id="effScoreCaption">Calculating…</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Machine ranking</h3>
+              <span class="panel-sub">by health score</span>
+            </div>
+            <div id="rankingList" class="ranking-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Predictive maintenance</h3>
+            </div>
+            <div id="maintenanceList" class="maintenance-list"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>AI recommendations</h3>
+            <span class="panel-sub">generated from current plant data</span>
+          </div>
+          <div id="aiRecommendations" class="recommendation-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ ALERTS ============ -->
+      <section id="page-alerts" class="page">
+        <div class="panel-head standalone">
+          <h3>Alerts</h3>
+          <div class="alert-filters">
+            <button class="chip active" data-filter="all">All</button>
+            <button class="chip" data-filter="critical">Critical</button>
+            <button class="chip" data-filter="warning">Warning</button>
+            <button class="chip" data-filter="info">Info</button>
+          </div>
+          <button id="simulateAlertBtn" class="btn-secondary">+ Simulate alert</button>
+        </div>
+
+        <div class="grid-2">
+          <div id="alertList" class="alert-list"></div>
+          <div class="panel">
+            <div class="panel-head"><h3>Notification channels</h3></div>
+            <div class="channel-row">
+              <span>SMS</span>
+              <label class="switch"><input type="checkbox" id="chanSms" checked><span class="slider"></span></label>
+            </div>
+            <div class="channel-row">
+              <span>WhatsApp</span>
+              <label class="switch"><input type="checkbox" id="chanWhatsapp" checked><span class="slider"></span></label>
+            </div>
+            <div class="channel-row">
+              <span>Email</span>
+              <label class="switch"><input type="checkbox" id="chanEmail" checked><span class="slider"></span></label>
+            </div>
+            <p class="muted-note">These toggles control which channels a simulated alert would notify. No real messages are sent in this demo build.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section id="page-reports" class="page">
+        <div class="panel-head standalone">
+          <h3>Reports</h3>
+          <div class="report-tabs">
+            <button class="chip active" data-range="daily">Daily</button>
+            <button class="chip" data-range="weekly">Weekly</button>
+            <button class="chip" data-range="monthly">Monthly</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="reportKpis"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Consumption breakdown</h3>
+            <div class="report-actions">
+              <button id="downloadCsv" class="btn-secondary">⬇ Export Excel (.csv)</button>
+              <button id="downloadPdf" class="btn-secondary">⬇ Export PDF</button>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="reportChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Energy audit summary</h3>
+          </div>
+          <div id="auditSummary" class="audit-summary"></div>
+        </div>
+      </section>
+
+      <!-- ============ SUSTAINABILITY ============ -->
+      <section id="page-sustainability" class="page">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Carbon footprint (month)</span>
+            <span class="kpi-value"><span id="sustCarbon">0</span> <small>kg CO₂</small></span>
+          </div>
+          <div class="kpi-card accent">
+            <span class="kpi-label">CO₂ reduction vs. baseline</span>
+            <span class="kpi-value"><span id="sustReduction">0</span><small>%</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Estimated trees saved</span>
+            <span class="kpi-value"><span id="sustTrees">0</span> <small>trees/yr</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Energy saved (month)</span>
+            <span class="kpi-value"><span id="sustEnergy">0</span> <small>kWh</small></span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Green score</h3></div>
+            <div class="chart-wrap score-wrap"><canvas id="greenScoreChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>UN sustainable development goals supported</h3></div>
+            <div id="sdgGrid" class="sdg-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section id="page-settings" class="page">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Machines</h3></div>
+            <form id="addMachineForm" class="inline-form">
+              <input type="text" id="newMachineName" placeholder="Machine name" required />
+              <input type="text" id="newMachineType" placeholder="Type e.g. CNC" required />
+              <button type="submit" class="btn-primary">+ Add</button>
+            </form>
+            <div id="settingsMachineList" class="settings-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Tariff & thresholds</h3></div>
+            <label class="field-row">Electricity tariff (₹ / kWh)
+              <input type="number" id="tariffInput" step="0.5" />
+            </label>
+            <label class="field-row">High temperature threshold (°C)
+              <input type="range" id="tempThreshold" min="50" max="100" />
+              <span id="tempThresholdVal"></span>
+            </label>
+            <label class="field-row">Energy spike threshold (%)
+              <input type="range" id="spikeThreshold" min="5" max="60" />
+              <span id="spikeThresholdVal"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>User management</h3></div>
+          <form id="addUserForm" class="inline-form">
+            <input type="text" id="newUserName" placeholder="Full name" required />
+            <select id="newUserRole">
+              <option>Admin</option>
+              <option>Factory Manager</option>
+              <option selected>Operator</option>
+            </select>
+            <button type="submit" class="btn-primary">+ Add user</button>
+          </form>
+          <div id="userTable" class="settings-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ SUPPORT ============ -->
+      <section id="page-support" class="page">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Frequently asked questions</h3></div>
+            <div id="faqList" class="faq-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Send feedback</h3></div>
+            <form id="feedbackForm" class="stacked-form">
+              <label>Name<input type="text" required /></label>
+              <label>Email<input type="email" required /></label>
+              <label>Message<textarea rows="4" required></textarea></label>
+              <button type="submit" class="btn-primary full-width">Send feedback</button>
+            </form>
+            <p class="muted-note">Help center: support@gridpulse.demo · +91 90000 00000</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== MACHINE DETAIL MODAL ===================== -->
+<div id="machineModal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" id="closeMachineModal">✕</button>
+    <div class="modal-grid">
+      <div>
+        <h3 id="modalMachineName">Machine</h3>
+        <p class="muted-note" id="modalMachineType">Type</p>
+        <div class="modal-stats" id="modalMachineStats"></div>
+      </div>
+      <div class="qr-box">
+        <div id="qrcode"></div>
+        <span class="muted-note">Scan for live machine info</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== AI CHATBOT ===================== -->
+<button id="chatToggle" class="chat-toggle">💬</button>
+<div id="chatPanel" class="chat-panel hidden">
+  <div class="chat-head">
+    <span>GridPulse AI assistant</span>
+    <button id="closeChatBtn">✕</button>
+  </div>
+  <div id="chatMessages" class="chat-messages"></div>
+  <form id="chatForm" class="chat-form">
+    <input type="text" id="chatInput" placeholder="Ask about energy saving…" autocomplete="off" />
+    <button type="submit">➤</button>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
